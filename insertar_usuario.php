@@ -1,8 +1,12 @@
 <?php
+header("Access-Control-Allow-Origin: *");
+header("Content-Type: application/json");
+
 require_once "conexion.php";
 
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-    header("Location: index.html");
+    http_response_code(405);
+    echo json_encode(["success" => false, "message" => "Método no permitido."]);
     exit;
 }
 
@@ -11,10 +15,11 @@ $email    = trim($_POST["email"] ?? "");
 $password = $_POST["password"] ?? "";
 
 if ($nombre === "" || $email === "" || $password === "") {
-    die("Faltan datos.");
+    http_response_code(400);
+    echo json_encode(["success" => false, "message" => "Faltan datos."]);
+    exit;
 }
 
-// Hash the password — never store it in plain text
 $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
 $sql = "INSERT INTO usuarios (nombre, email, password) VALUES (?, ?, ?)";
@@ -22,12 +27,11 @@ $stmt = $conn->prepare($sql);
 $stmt->bind_param("sss", $nombre, $email, $passwordHash);
 
 if ($stmt->execute()) {
-    echo "Usuario registrado correctamente.";
-    // or: header("Location: index.html?ok=1");
+    echo json_encode(["success" => true, "message" => "Usuario registrado correctamente."]);
 } else {
-    echo "Error al guardar: " . $stmt->error;
+    http_response_code(500);
+    echo json_encode(["success" => false, "message" => "Error al guardar: " . $stmt->error]);
 }
 
 $stmt->close();
 $conn->close();
-?>
