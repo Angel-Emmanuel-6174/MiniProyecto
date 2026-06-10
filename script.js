@@ -4,6 +4,11 @@ const mensaje = document.getElementById("mensaje");
 form.addEventListener("submit", async (e) => {
     e.preventDefault();
 
+    if (window.location.protocol === "file:") {
+        mensaje.textContent = "Abre la página con http://localhost (XAMPP), no como archivo local.";
+        return;
+    }
+
     mensaje.textContent = "Enviando...";
 
     try {
@@ -12,14 +17,22 @@ form.addEventListener("submit", async (e) => {
             body: new FormData(form)
         });
 
-        const result = await response.json();
+        const text = await response.text();
+        let result;
 
-        mensaje.textContent = result.message;
+        try {
+            result = JSON.parse(text);
+        } catch {
+            mensaje.textContent = "El servidor no devolvió JSON. ¿Están Apache y MySQL en ejecución?";
+            return;
+        }
+
+        mensaje.textContent = result.message || "Error desconocido.";
 
         if (result.success) {
             form.reset();
         }
     } catch (error) {
-        mensaje.textContent = "Error de conexión con el servidor.";
+        mensaje.textContent = "No se pudo contactar al servidor. Usa http://localhost y verifica que XAMPP esté activo.";
     }
 });

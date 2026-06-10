@@ -24,6 +24,16 @@ $passwordHash = password_hash($password, PASSWORD_DEFAULT);
 
 $sql = "INSERT INTO usuarios (nombre, email, password) VALUES (?, ?, ?)";
 $stmt = $conn->prepare($sql);
+
+if (!$stmt) {
+    http_response_code(500);
+    echo json_encode([
+        "success" => false,
+        "message" => "Error en la consulta: " . $conn->error
+    ]);
+    exit;
+}
+
 $stmt->bind_param("sss", $nombre, $email, $passwordHash);
 
 if ($stmt->execute()) {
